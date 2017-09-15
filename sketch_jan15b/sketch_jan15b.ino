@@ -76,8 +76,8 @@ int currentState = 1;
 //WeeklySchedule size is 21
 //Microcontroller EEPROM has 512 bytes, so 512/21 = maximum schedule entries
 int WEEKLY_SCHEDULE_SIZE = 21;
-int MAX_SCHEDULE_ENTRIES = 24;
-WeeklySchedule weeklySchedule[24];
+const int MAX_SCHEDULE_ENTRIES = 24;
+WeeklySchedule weeklySchedule[MAX_SCHEDULE_ENTRIES];
 //YearlySchedule yearlySchedule[26];
 
 // the setup routine runs once when you press reset:
@@ -85,9 +85,9 @@ WeeklySchedule weeklySchedule[24];
 byte analogPin;
 
 // The following lines can be uncommented to set the date and time
-//rtc.setDOW(WEDNESDAY);     // Set Day-of-Week to SUNDAY
-//rtc.setTime(23, 5, 0);     // Set the time to 12:00:00 (24hr format)
-//rtc.setDate(15, 3, 2017);   // Set the date to January 1st, 2014
+//rtc.setDOW(WEDNESDAY);     // Set Day-of-Week to WEDNESDAY
+//rtc.setTime(23, 5, 0);     // Set the time to 23:05:00 (24hr format)
+//rtc.setDate(15, 3, 2017);   // Set the date to March 3rd, 2017
 
 void setDate(int day, int month, int year, char dow) {
   rtc.setDOW(dow);
@@ -144,7 +144,7 @@ void setup() {
 
   
   
-  for (int i = 0; i <= MAX_SCHEDULE_ENTRIES - 1; i++) {
+  for (int i = 0; i < MAX_SCHEDULE_ENTRIES; i++) {
     Serial.println(weeklySchedule[i].Hour);
   }
   delay(1000);
@@ -220,11 +220,11 @@ void HandleRelay(int relay, int state, int index)
 }
 
 void VerifyWeeklySchedule(CurrentDateTime currentDateTime, WeeklySchedule weeklySchedule[]) {
-  for (int countSchedule = 0; countSchedule < 52; countSchedule++) {
+  for (int countSchedule = 0; countSchedule < MAX_SCHEDULE_ENTRIES; countSchedule++) {
     if (weeklySchedule[countSchedule].Hour == currentDateTime.Hour && weeklySchedule[countSchedule].Minute == currentDateTime.Minute) {
-      for (int countWeekDay = 0; countWeekDay < 6; countWeekDay++) {
+      for (int countWeekDay = 0; countWeekDay <= 6; countWeekDay++) {
         if (currentDateTime.WeekDay == weeklySchedule[countSchedule].WeekDays[countWeekDay]) {
-          HandleRelay(weeklySchedule[countWeekDay].Relay, weeklySchedule[countWeekDay].State, countSchedule);
+          HandleRelay(weeklySchedule[countSchedule].Relay, weeklySchedule[countSchedule].State, countSchedule);
         };
       };
     };
@@ -235,9 +235,9 @@ void VerifyWeeklySchedule(CurrentDateTime currentDateTime, WeeklySchedule weekly
 // the loop routine runs over and over again forever:
 void loop() {
   digitalWrite(ledBuiltIn, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(900);               // wait for a second
+  delay(1000);               // wait for a second
   digitalWrite(ledBuiltIn, LOW);    // turn the LED off by making the voltage LOW
-  //delay(100);          +     // wait for a second
+  
 
   CurrentDateTime teste = getCurrentDateTime();
   //getCurrentDateTime(teste);
