@@ -84,11 +84,6 @@ WeeklySchedule weeklySchedule[MAX_SCHEDULE_ENTRIES];
 
 byte analogPin;
 
-// The following lines can be uncommented to set the date and time
-//rtc.setDOW(WEDNESDAY);     // Set Day-of-Week to WEDNESDAY
-//rtc.setTime(23, 5, 0);     // Set the time to 23:05:00 (24hr format)
-//rtc.setDate(15, 3, 2017);   // Set the date to March 3rd, 2017
-
 void setDate(int day, int month, int year, char dow) {
   rtc.setDOW(dow);
   rtc.setDate(day, month, year);
@@ -132,15 +127,17 @@ void setup() {
   readFromEEPROM(weeklySchedule);
   weeklySchedule[0] = {22, 30, 1, 1, {4, 2}};
   weeklySchedule[1] = {21, 0, 1, 1, {2}};
-  saveToEEPROM(weeklySchedule);
+  weeklySchedule[1] = {22, 59, 1, 1, {5}};
+  
+  //saveToEEPROM(weeklySchedule);
   //weeklySchedule[2] = {20, 0, 1, 1, {2}};
   //  WeeklySchedule weeklySchedule[];
   //  YearlySchedule yearlySchedule[];
   Serial.begin(9600);
   rtc.begin();
 
-  //setDate(16,3,2017,4);
-  //setTime(22,22,30);
+  //setDate(14,9,2017,5);
+  //setTime(22,55,30);
 
   
   
@@ -214,9 +211,9 @@ void displayState() {
 void HandleRelay(int relay, int state, int index)
 {
   Serial.println("Handling relay");
-  Serial.println(relay);
-  Serial.println(state);
-  Serial.println(index);
+  Serial.println("Relay: " + relay);
+  Serial.println("State: " + state);
+  Serial.println("Index: " + index);
 }
 
 void VerifyWeeklySchedule(CurrentDateTime currentDateTime, WeeklySchedule weeklySchedule[]) {
@@ -241,16 +238,18 @@ void loop() {
 
   CurrentDateTime teste = getCurrentDateTime();
   //getCurrentDateTime(teste);
+  Serial.println("---------");
   Serial.println(teste.Day);
   Serial.println(teste.Month);
   Serial.println(teste.Year);
   Serial.println(teste.Hour);
   Serial.println(teste.Minute);
+  Serial.println("-------------");
   //Serial.println(readWeeklyschedule());
   //saveToEEPROM(WEEKLYSCHEDULEEEADDRESS, weeklySchedule[0].Hour);
-  //Serial.println(weeklySchedule[0].Hour);
- // Serial.println(weeklySchedule[0].Minute);
-  //Serial.println("Ronaldo");
+  Serial.println(weeklySchedule[0].Hour);
+  Serial.println(weeklySchedule[0].Minute);
+  Serial.println("Ronaldo");
   VerifyWeeklySchedule(teste, weeklySchedule);
   // displayState();
   // touchSensorVal = digitalRead(touchSensor);
