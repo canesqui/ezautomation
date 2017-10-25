@@ -7,8 +7,8 @@
 #include <EEPROM.h>
 #include "customtype.h"
 #include <DS3231.h>
-
-
+#include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 
 /*struct CurrentDateTime {
   byte Day;
@@ -43,6 +43,10 @@ DS3231  rtc(SDA, SCL);
 // Init a Time-data structure
 Time  t;
 
+SoftwareSerial BTSerial(10, 11); // RX | TX
+ 
+int estado_antes = -1; // 
+
 CurrentDateTime getCurrentDateTime() {
 
   t = rtc.getTime();
@@ -72,12 +76,13 @@ int touchSensor = 7;
 int touchSensorVal = LOW;
 int oldTouchSensorVal = LOW;
 int currentState = 1;
-
 //WeeklySchedule size is 21
 //Microcontroller EEPROM has 512 bytes, so 512/21 = maximum schedule entries
 int WEEKLY_SCHEDULE_SIZE = 21;
 const int MAX_SCHEDULE_ENTRIES = 24;
 WeeklySchedule weeklySchedule[MAX_SCHEDULE_ENTRIES];
+char scheduleJson[400] = {};
+
 //YearlySchedule yearlySchedule[26];
 
 // the setup routine runs once when you press reset:
@@ -138,8 +143,14 @@ void setup() {
 
   //setDate(14,9,2017,5);
   //setTime(22,55,30);
-
+  pinMode(8, INPUT);  // este pino detecta se há uma conexão Bluetooth ativa
+ 
+  // o pino KEY do HC-05 pode ser deixado sem conexão para o modo de operação normal
+  // ou conecte-o ao pino 9 e use o bloco abaixo
+  pinMode(9, OUTPUT);  // Este pino está estado_antes ao pino KEY do HC-05
+  digitalWrite(9, LOW); // Coloca o HC-05 em modo de operação
   
+  BTSerial.begin(9600);  // velocidade padrão HC-05 em operação normal   
   
   for (int i = 0; i < MAX_SCHEDULE_ENTRIES; i++) {
     Serial.println(weeklySchedule[i].Hour);
@@ -167,6 +178,31 @@ void setup() {
 //    }
 // }
 
+void setSchedule(char schedule[]){
+  StaticJsonBuffer<200> jsonBuffer;
+  Serial.print(schedule);
+
+  //Serial.print("setSchedule");
+  JsonObject& root = jsonBuffer.parseObject(schedule);
+     
+  if (root.success())
+  {
+    Serial.print("Success");
+
+    //int index = root["position"].as<int>();
+    //Serial.print("after parseobject");
+    //Serial.print(root["hour"].as<char>());
+    //weeklySchedule[index] = {root["hour"], root["minute"], root["state"], root["relay"]};
+  
+    //for (int i=0; i <= sizeof(root["weekdays"])/sizeof(int); i++){
+    //    weeklySchedule[index].WeekDays[i]=root["weekdays"][i];
+    //}
+    
+    //saveToEEPROM(weeklySchedule);
+  }
+  //else
+  //{Serial.print("Root failure");}
+}
 
 void turnOffLeds() {
   //turn off all led
@@ -231,30 +267,80 @@ void VerifyWeeklySchedule(CurrentDateTime currentDateTime, WeeklySchedule weekly
 
 // the loop routine runs over and over again forever:
 void loop() {
-  digitalWrite(ledBuiltIn, HIGH);   // turn the LED on (HIGH is the voltage level)
-  delay(1000);               // wait for a second
-  digitalWrite(ledBuiltIn, LOW);    // turn the LED off by making the voltage LOW
-  
+  //digitalWrite(ledBuiltIn, HIGH);   // turn the LED on (HIGH is the voltage level)
+  //delay(1000);               // wait for a second
+  //digitalWrite(ledBuiltIn, LOW);    // turn the LED off by making the voltage LOW
 
+  int estado_agora = digitalRead(8); // verifica se há uma conexão
+  
+  // se o estado de conexão mudou:
+  if (estado_antes != estado_agora) {
+    if (estado_agora == HIGH) {
+      Serial.println("");
+      Serial.println(" > CONECTADO");
+    }
+    else {
+      Serial.println("");
+      Serial.println(" > desconectado");
+    }
+    estado_antes = estado_agora; // atualiza para a proxima rodada
+  }
+
+  // Ponte entre o Serial do Arduino e a software serial ligada ao HC-05
+  int i = 0;
+  char inChar;
+  if (BTSerial.available()>0)
+  {   
+  
+    inChar = BTSerial.read();
+    char roChar[] = "{\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}";
+
+    //Serial.print("I received: ");
+    //Serial.print(inChar);
+    setSchedule(roChar);
+  
+  }
+  
+  //Serial.println("after receiving data from bluetooth");
+  //Serial.print(inChar);
+  //if (root.success())
+  //{
+    //Serial.write(scheduleJson);
+    
+    //saveToEEPROM(weeklySchedule);
+    //const char* sensor    = root["sensor"];
+    //long        time      = root["time"];
+    //double      latitude  = root["data"][0];
+    //double      longitude = root["data"][1]; 
+  //}
+  
+  //
+  // Step 3: Retrieve the values
+  //
+  
+  //if (BTSerial.available())
+    
+  //if (Serial.available())
+  //  BTSerial.write(Serial.read());
+    
   CurrentDateTime teste = getCurrentDateTime();
   //getCurrentDateTime(teste);
-  Serial.println("---------");
-  Serial.println(teste.Day);
-  Serial.println(teste.Month);
-  Serial.println(teste.Year);
-  Serial.println(teste.Hour);
-  Serial.println(teste.Minute);
-  Serial.println("-------------");
-  //Serial.println(readWeeklyschedule());
-  //saveToEEPROM(WEEKLYSCHEDULEEEADDRESS, weeklySchedule[0].Hour);
-  Serial.println(weeklySchedule[0].Hour);
-  Serial.println(weeklySchedule[0].Minute);
-  Serial.println("Ronaldo");
-  VerifyWeeklySchedule(teste, weeklySchedule);
-  // displayState();
-  // touchSensorVal = digitalRead(touchSensor);
-  delay(900);
+  //Serial.println("---------");
+  //Serial.print(teste.Day);
+  //Serial.print(teste.Month);
+  //Serial.println(teste.Year);
+  //Serial.println(teste.Hour);
+  //Serial.println(teste.Minute);
+  //Serial.println("-------------");
+  
+  //Serial.println(weeklySchedule[0].Hour);
+  //Serial.println(weeklySchedule[0].Minute);
+  //Serial.println("Ronaldo");
+  //VerifyWeeklySchedule(teste, weeklySchedule);
+ 
+  //delay(900);
   // changeState();
+  
 
 }
 
